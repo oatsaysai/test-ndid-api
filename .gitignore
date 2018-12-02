@@ -1,0 +1,12 @@
+# log
+backup_log/
+http_log/
+log/
+*.log
+
+# misc
+.DS_Store
+*.swp
+
+# dep
+vendor/
