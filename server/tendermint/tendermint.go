@@ -90,7 +90,7 @@ type JsonRPCQuery struct {
 
 func Transact(fnName []byte, param []byte, nonce []byte, signature []byte, nodeID []byte) {
 	cfg := config.LoadConfiguration()
-	if cfg.Role == "NDID" {
+	if cfg.Role == "NDID" || cfg.Role == "ndid" {
 		broadcastTxCommit(fnName, param, nonce, signature, nodeID)
 	} else {
 		// broadcastTxCommit(fnName, param, nonce, signature, nodeID)
