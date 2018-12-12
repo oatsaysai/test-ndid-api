@@ -75,7 +75,7 @@ func CreateRequest(c echo.Context) error {
 	if err := c.Bind(request); err != nil {
 		return err
 	}
-	id := uuid.Must(uuid.NewV4())
+	id := uuid.Must(uuid.NewV4(), nil)
 	var param RequestToTm
 	param.RequestID = id.String()
 
