@@ -17,6 +17,7 @@ import (
 	protoTm "github.com/test-ndid-api/protos/tendermint"
 	"github.com/test-ndid-api/server/config"
 	"github.com/test-ndid-api/server/core/common"
+	"github.com/test-ndid-api/server/tendermint"
 )
 
 var (
@@ -43,6 +44,7 @@ func main() {
 	e.POST("/v2/rp/requests/:namespace/:identifier", common.CreateRequest)
 
 	go sub()
+	// go subTx()
 
 	// Server
 	e.Logger.Fatal(e.Start(":" + cfg.ServerListenPort))
@@ -79,6 +81,10 @@ func sub() {
 				return
 			}
 			writeLogBlockResult("block", res.Result.Data.Value.Block.Header.Height, res.Result.Data.Value.Block.Header.NumTxs)
+
+			// get block result
+			tendermint.GetBlockResult(res.Result.Data.Value.Block.Header.Height)
+
 			go func() {
 				for _, tx := range res.Result.Data.Value.Block.Data.Txs {
 
@@ -118,6 +124,91 @@ func sub() {
 	query.Method = "subscribe"
 	query.ID = "0"
 	query.Params.Query = `tm.event = 'NewBlock'`
+	str, err := json.Marshal(query)
+	if err != nil {
+		log.Println("err:", err)
+	}
+	err = c.WriteMessage(websocket.TextMessage, str)
+	if err != nil {
+		log.Println("write err:", err)
+		return
+	}
+
+	for {
+		select {
+		case <-done:
+			// log.Println("done")
+			return
+		}
+	}
+}
+
+func subTx() {
+	c := ws.CreateNewIfNotExist()
+	// defer c.Close()
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("read err:", err)
+				return
+			}
+			message = message
+			// log.Printf("recv: %s", message)
+			// var res NewBlockResult
+			// err = json.Unmarshal(message, &res)
+			// if err != nil {
+			// 	log.Println("err:", err)
+			// 	return
+			// }
+			// writeLogBlockResult("block", res.Result.Data.Value.Block.Header.Height, res.Result.Data.Value.Block.Header.NumTxs)
+
+			// // get block result
+			// tendermint.GetBlockResult(res.Result.Data.Value.Block.Header.Height)
+
+			// go func() {
+			// 	for _, tx := range res.Result.Data.Value.Block.Data.Txs {
+
+			// 		decodedTx, err := base64.StdEncoding.DecodeString(tx)
+			// 		if err != nil {
+			// 			log.Println("err:", err)
+			// 		}
+
+			// 		var txObj protoTm.Tx
+			// 		err = proto.Unmarshal(decodedTx, &txObj)
+			// 		if err != nil {
+			// 			log.Println("err:", err)
+			// 		}
+
+			// 		method := txObj.Method
+			// 		param := txObj.Params
+			// 		nonce := txObj.Nonce
+
+			// 		if method == "CreateRequest" {
+			// 			cfg := config.LoadConfiguration()
+			// 			var paramObj common.RequestToTm
+			// 			err = json.Unmarshal([]byte(param), &paramObj)
+			// 			stopTime := time.Now()
+			// 			// Event log
+			// 			writeEventLog(cfg.NodeID, stopTime, "create_request_after_tm_tx", paramObj.RequestID, res.Result.Data.Value.Block.Header.Height)
+			// 		}
+
+			// 		stopTime := time.Now()
+			// 		writeLogTimeWithNonce(string(method), []byte(nonce), stopTime)
+			// 	}
+			// }()
+		}
+	}()
+
+	var query JsonRPCQuery
+	query.Jsonrpc = "2.0"
+	query.Method = "subscribe"
+	query.ID = "0"
+	query.Params.Query = `tm.event = 'Tx'`
 	str, err := json.Marshal(query)
 	if err != nil {
 		log.Println("err:", err)

@@ -506,3 +506,61 @@ func (b *Event) Emit(e string, response string) {
 		}
 	}
 }
+
+type BlockResult struct {
+	Jsonrpc string `json:"jsonrpc"`
+	ID      string `json:"id"`
+	Result  struct {
+		Height  string `json:"height"`
+		Results struct {
+			DeliverTx []struct {
+				Log  string `json:"log"`
+				Tags []struct {
+					Key   string `json:"key"`
+					Value string `json:"value"`
+				} `json:"tags"`
+			} `json:"DeliverTx"`
+			EndBlock struct {
+				ValidatorUpdates interface{} `json:"validator_updates"`
+			} `json:"EndBlock"`
+			BeginBlock struct {
+			} `json:"BeginBlock"`
+		} `json:"results"`
+	} `json:"result"`
+}
+
+func GetBlockResult(blockNumber string) (interface{}, error) {
+	cfg := config.LoadConfiguration()
+	tmAddr := "http://" + cfg.TendermintIP + ":" + cfg.TendermintPort
+	var URL *url.URL
+	URL, err := url.Parse(tmAddr)
+	if err != nil {
+		panic("boom")
+	}
+	URL.Path += "/block_results"
+	parameters := url.Values{}
+	parameters.Add("height", blockNumber)
+	URL.RawQuery = parameters.Encode()
+	encodedURL := URL.String()
+	req, err := http.NewRequest("GET", encodedURL, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var body BlockResult
+	json.NewDecoder(resp.Body).Decode(&body)
+	// fmt.Println(body)
+	return body, nil
+}
