@@ -14,8 +14,8 @@ rm -rf http_log
 
 TENDERMINT_IP=127.0.0.1 \
 TENDERMINT_PORT=45000 \
-NODE_ID=NDID1 \
-ROLE=NDID \
+NODE_ID=ndid1 \
+ROLE=ndid \
 go run server/dev_init/dev_init.go
 
 TENDERMINT_IP=127.0.0.1 \
