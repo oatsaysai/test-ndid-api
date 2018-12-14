@@ -64,7 +64,7 @@ func initNDID() {
 func registerNodeAndSetToken() {
 	roles := [...]string{"rp", "idp", "as"}
 	for _, role := range roles {
-		for i := 1; i <= 3; i++ {
+		for i := 1; i <= 4; i++ {
 			masterPubKey, err := ioutil.ReadFile("server/dev_key/" + role + "/" + role + strconv.Itoa(i) + "_master.pub")
 			if err != nil {
 				log.Fatal(err)
