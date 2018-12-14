@@ -150,10 +150,10 @@ func broadcastTxSync(fnName []byte, param []byte, nonce []byte, signature []byte
 	}
 	defer resp.Body.Close()
 
-	var body ResponseTx
+	var body ResponseTxSync
 	json.NewDecoder(resp.Body).Decode(&body)
-	fmt.Printf("CheckTx log: %s", body.Result.CheckTx.Log)
-	fmt.Printf("DeliverTx log: %s", body.Result.DeliverTx.Log)
+	fmt.Printf("Data: %s\n", body.Result.Data)
+	fmt.Printf("Log: %s\n", body.Result.Log)
 	return body, nil
 
 	// // fmt.Println("broadcastTxSync")
