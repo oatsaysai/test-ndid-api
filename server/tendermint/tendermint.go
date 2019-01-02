@@ -16,11 +16,17 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	protoTm "github.com/test-ndid-api/protos/tendermint"
 	"github.com/test-ndid-api/server/config"
+	wsClent "github.com/test-ndid-api/server/webSocket"
 )
 
 var (
 	event = Event{nil}
-	ws    = WebSocket{nil}
+	// ws    = WebSocket{nil}
+)
+
+var (
+	ws     = wsClent.NewWebSocketClient()
+	wsPool = wsClent.NewWebSocketPool(10)
 )
 
 type txResult struct {
@@ -85,11 +91,31 @@ type JsonRPCQuery struct {
 	} `json:"params"`
 }
 
+func init() {
+	fmt.Println("Init")
+	wsPool.InitializeAndConnect()
+}
+
 // var tendermintAddr = getEnv("TENDERMINT_ADDRESS", "http://localhost:45000")
 // var tendermintAddr = "http://localhost:45000"
 
 func Transact(fnName []byte, param []byte, nonce []byte, signature []byte, nodeID []byte) {
+
 	cfg := config.LoadConfiguration()
+
+	// Wait for connect WebSocket
+	// if cfg.Role == "NDID" || cfg.Role == "ndid" {
+	// 	if !ws.Connected {
+	// 		// go ws.Connect()
+	// 	}
+	// 	for {
+	// 		time.Sleep(500 * time.Millisecond)
+	// 		if ws.Connected {
+	// 			break
+	// 		}
+	// 	}
+	// }
+
 	if cfg.Role == "NDID" || cfg.Role == "ndid" {
 		broadcastTxCommit(fnName, param, nonce, signature, nodeID)
 	} else {
@@ -102,7 +128,7 @@ func broadcastTxSync(fnName []byte, param []byte, nonce []byte, signature []byte
 
 	startTime := time.Now()
 	writeLogTimeWithNonce(string(fnName), nonce, startTime)
-	cfg := config.LoadConfiguration()
+	// cfg := config.LoadConfiguration()
 
 	var tx protoTm.Tx
 	tx.Method = string(fnName)
@@ -116,45 +142,50 @@ func broadcastTxSync(fnName []byte, param []byte, nonce []byte, signature []byte
 		log.Printf("err: %s", err.Error())
 	}
 
-	txEncoded := hex.EncodeToString(txByte)
+	// txEncoded := hex.EncodeToString(txByte)
+	wsPool.BroadcastTxSync(txByte)
+	return nil, nil
 
-	tmAddr := "http://" + cfg.TendermintIP + ":" + cfg.TendermintPort
-	var URL *url.URL
-	URL, err = url.Parse(tmAddr)
-	if err != nil {
-		panic("boom")
-	}
-	URL.Path += "/broadcast_tx_sync"
-	parameters := url.Values{}
-	parameters.Add("tx", `0x`+txEncoded)
-	URL.RawQuery = parameters.Encode()
-	encodedURL := URL.String()
-	req, err := http.NewRequest("GET", encodedURL, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
+	// tmAddr := "http://" + cfg.TendermintIP + ":" + cfg.TendermintPort
+	// var URL *url.URL
+	// URL, err = url.Parse(tmAddr)
+	// if err != nil {
+	// 	panic("boom")
+	// }
+	// URL.Path += "/broadcast_tx_sync"
+	// parameters := url.Values{}
+	// parameters.Add("tx", `0x`+txEncoded)
+	// URL.RawQuery = parameters.Encode()
+	// encodedURL := URL.String()
+	// req, err := http.NewRequest("GET", encodedURL, nil)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return nil, err
+	// }
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	// client := &http.Client{
+	// 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+	// 		return http.ErrUseLastResponse
+	// 	},
+	// }
 
-	resp, err := client.Do(req)
-	if err != nil {
-		// panic(err)
-		return nil, err
-	}
-	defer resp.Body.Close()
+	// resp, err := client.Do(req)
+	// if err != nil {
+	// 	// panic(err)
+	// 	return nil, err
+	// }
+	// defer resp.Body.Close()
 
-	var body ResponseTxSync
-	json.NewDecoder(resp.Body).Decode(&body)
-	fmt.Printf("Data: %s\n", body.Result.Data)
-	fmt.Printf("Log: %s\n", body.Result.Log)
-	return body, nil
+	// var body ResponseTxSync
+	// json.NewDecoder(resp.Body).Decode(&body)
+	// fmt.Printf("Data: %s\n", body.Result.Data)
+	// fmt.Printf("Log: %s\n", body.Result.Log)
+	// fmt.Printf("Raw: %s\n", resp.Body)
+	// return body, nil
+
+	// ======================
 
 	// // fmt.Println("broadcastTxSync")
 	// cfg := config.LoadConfiguration()
@@ -254,6 +285,10 @@ func broadcastTxCommit(fnName []byte, param []byte, nonce []byte, signature []by
 	}
 
 	txEncoded := hex.EncodeToString(txByte)
+
+	// result := ws.BroadcastTxCommit(txByte)
+	// // fmt.Println(result)
+	// return result, nil
 
 	tmAddr := "http://" + cfg.TendermintIP + ":" + cfg.TendermintPort
 	var URL *url.URL

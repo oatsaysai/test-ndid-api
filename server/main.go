@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -18,10 +17,11 @@ import (
 	"github.com/test-ndid-api/server/config"
 	"github.com/test-ndid-api/server/core/common"
 	"github.com/test-ndid-api/server/tendermint"
+	wsClent "github.com/test-ndid-api/server/webSocket"
 )
 
 var (
-	ws = WebSocket{nil}
+	ws = wsClent.NewWebSocketClient()
 )
 
 var port string
@@ -45,6 +45,9 @@ func main() {
 
 	go sub()
 	// go subTx()
+
+	// ws.InitConnection()
+	// go ws.Connect()
 
 	// Server
 	e.Logger.Fatal(e.Start(":" + cfg.ServerListenPort))
@@ -146,7 +149,6 @@ func sub() {
 func subTx() {
 	c := ws.CreateNewIfNotExist()
 	// defer c.Close()
-
 	done := make(chan struct{})
 
 	go func() {
@@ -228,24 +230,24 @@ func subTx() {
 	}
 }
 
-type WebSocket struct {
-	con *websocket.Conn
-}
+// type WebSocket struct {
+// 	con *websocket.Conn
+// }
 
-func (w *WebSocket) CreateNewIfNotExist() *websocket.Conn {
-	if w.con == nil {
-		cfg := config.LoadConfiguration()
-		addr := cfg.TendermintIP + ":" + cfg.TendermintPort
-		u := url.URL{Scheme: "ws", Host: addr, Path: "/websocket"}
-		var err error
-		w.con, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-		if err != nil {
-			log.Fatal("dial:", err)
-		}
-		// defer w.con.Close()
-	}
-	return w.con
-}
+// func (w *WebSocket) CreateNewIfNotExist() *websocket.Conn {
+// 	if w.con == nil {
+// 		cfg := config.LoadConfiguration()
+// 		addr := cfg.TendermintIP + ":" + cfg.TendermintPort
+// 		u := url.URL{Scheme: "ws", Host: addr, Path: "/websocket"}
+// 		var err error
+// 		w.con, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+// 		if err != nil {
+// 			log.Fatal("dial:", err)
+// 		}
+// 		// defer w.con.Close()
+// 	}
+// 	return w.con
+// }
 
 func writeLogBlockResult(filename string, blockNumber string, numTxs string) {
 	createDirIfNotExist("log")
