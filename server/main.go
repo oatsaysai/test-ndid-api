@@ -42,6 +42,7 @@ func main() {
 
 	// common
 	e.POST("/v2/rp/requests/:namespace/:identifier", common.CreateRequest)
+	e.POST("/v2/setToken", common.SetNodeToken)
 
 	go sub()
 	// go subTx()

@@ -30,6 +30,11 @@ type Request struct {
 	RequestTimeout  int           `json:"request_timeout"`
 }
 
+type SetNodeTokenParam struct {
+	NodeID string  `json:"node_id"`
+	Amount float64 `json:"amount"`
+}
+
 type Responses struct {
 	RequestID string `json:"request_id"`
 }
@@ -103,6 +108,20 @@ func CreateRequest(c echo.Context) error {
 	writeLogTimeWithNonce(string("CreateRequest"), []byte(id.String()), stopTime)
 	// writeLog(string("CreateRequest"), (stopTime.UnixNano()-startTime.UnixNano())/int64(time.Millisecond))
 	return c.JSON(http.StatusCreated, &Responses{id.String()})
+}
+
+func SetNodeToken(c echo.Context) error {
+	cfg := config.LoadConfiguration()
+	var param SetNodeTokenParam
+	param.Amount = 10000
+	param.NodeID = cfg.NodeID
+	paramJSON, err := json.Marshal(param)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	signature, nonce := crypto.CreateSignatureAndNonce("SetNodeToken", string(paramJSON), "NDID")
+	tendermint.Transact([]byte("SetNodeToken"), paramJSON, []byte(nonce), signature, []byte("NDID"))
+	return c.JSON(http.StatusCreated, "OK")
 }
 
 func writeLog(filename string, time int64) {

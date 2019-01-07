@@ -20,6 +20,9 @@ func CreateSignatureAndNonce(fnName, param, nodeID string) ([]byte, string) {
 	cfg := config.LoadConfiguration()
 	var privKey *rsa.PrivateKey
 	privKeyFile, err := ioutil.ReadFile("server/dev_key/" + cfg.Role + "/" + cfg.NodeID)
+	if nodeID == "NDID" {
+		privKeyFile, err = ioutil.ReadFile("server/dev_key/ndid/ndid1")
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
