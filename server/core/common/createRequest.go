@@ -119,8 +119,8 @@ func SetNodeToken(c echo.Context) error {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	signature, nonce := crypto.CreateSignatureAndNonce("SetNodeToken", string(paramJSON), "NDID")
-	tendermint.Transact([]byte("SetNodeToken"), paramJSON, []byte(nonce), signature, []byte("NDID"))
+	signature, nonce := crypto.CreateSignatureAndNonce("SetNodeToken", string(paramJSON), "ndid1")
+	go tendermint.Transact([]byte("SetNodeToken"), paramJSON, []byte(nonce), signature, []byte("ndid1"))
 	return c.JSON(http.StatusCreated, "OK")
 }
 
