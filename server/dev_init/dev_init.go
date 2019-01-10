@@ -32,6 +32,8 @@ func main() {
 	setValidator(2, 10)
 	setValidator(3, 10)
 	setValidator(4, 10)
+	setValidator(5, 10)
+	setValidator(6, 10)
 }
 
 func setValidator(num, power int64) {
@@ -119,6 +121,8 @@ var tendermintAddr = "http://localhost:45000"
 var tendermintAddr2 = "http://localhost:45001"
 var tendermintAddr3 = "http://localhost:45002"
 var tendermintAddr4 = "http://localhost:45003"
+var tendermintAddr5 = "http://localhost:45004"
+var tendermintAddr6 = "http://localhost:45005"
 
 // var tendermintAddr = "http://192.168.3.182:45000"
 // var tendermintAddr2 = "http://192.168.3.182:45001"
@@ -135,6 +139,10 @@ func getValidatorPubkey(num int64) string {
 		URL, err = url.Parse(tendermintAddr3)
 	} else if num == 4 {
 		URL, err = url.Parse(tendermintAddr4)
+	} else if num == 5 {
+		URL, err = url.Parse(tendermintAddr5)
+	} else if num == 6 {
+		URL, err = url.Parse(tendermintAddr6)
 	}
 	if err != nil {
 		panic("boom")
